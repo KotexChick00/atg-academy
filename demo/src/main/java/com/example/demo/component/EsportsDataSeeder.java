@@ -8,6 +8,7 @@ import com.example.demo.service.EloCalculationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -20,6 +21,7 @@ import java.util.Map;
  * Danh sách đội và trận đấu được lấy y hệt từ dữ liệu AER 2026 gốc.
  */
 @Component
+@Profile("!h2")
 public class EsportsDataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(EsportsDataSeeder.class);

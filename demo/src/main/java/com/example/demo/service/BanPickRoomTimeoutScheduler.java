@@ -2,12 +2,14 @@ package com.example.demo.service;
 
 import com.example.demo.dto.banpick.BanPickRoomStateResponse;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 
 @Component
+@Profile("!h2")
 @ConditionalOnProperty(prefix = "spring.task.scheduling", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class BanPickRoomTimeoutScheduler {
 

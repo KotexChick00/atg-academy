@@ -13,256 +13,281 @@ import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@DataJpaTest(properties = {
+@SpringBootTest
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE",
+        "spring.datasource.driver-class-name=org.h2.Driver",
         "spring.jpa.database-platform=org.hibernate.dialect.H2Dialect",
         "spring.jpa.hibernate.ddl-auto=create-drop"
 })
+@Sql(scripts = "/cleanup.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_METHOD)
 @Import(EsportsDataService.class)
+
 class EsportsDataServiceIntegrationTest {
 
-    @Autowired
-    private EntityManager entityManager;
+        @Autowired
+        private EntityManager entityManager;
 
-    @Autowired
-    private EsportsDataService esportsDataService;
+        @Autowired
+        private EsportsDataService esportsDataService;
 
-    @BeforeEach
-    void setUp() {
-        EsportsTeam blueTeam = persistTeam("FS", "RPL");
-        EsportsTeam redTeam = persistTeam("SGP", "AOG");
+        @Autowired
+        private TransactionTemplate transactionTemplate;
 
-        Hero heroA = persistHero("Hero A");
-        Hero heroB = persistHero("Hero B");
-        Hero heroC = persistHero("Hero C");
-        Hero heroD = persistHero("Hero D");
-        Hero heroE = persistHero("Hero E");
-        Hero heroF = persistHero("Hero F");
-        Hero heroG = persistHero("Hero G");
-        Hero heroPickOnly = persistHero("Hero Pick Only");
-        Hero heroStatA = persistHero("Hero Stat A");
-        Hero heroStatB = persistHero("Hero Stat B");
-        Hero heroStatBanOnly = persistHero("Hero Stat Ban Only");
-        Hero heroStatBanSupport = persistHero("Hero Stat Ban Support");
+        @BeforeEach
+        void setUp() {
+                transactionTemplate.execute(status -> {
+                        EsportsTeam blueTeam = persistTeam("FS", "RPL");
+                        EsportsTeam redTeam = persistTeam("SGP", "AOG");
 
-        EsportsMatch proLeagueMatch = persistMatch("1", LocalDateTime.of(2026, 5, 1, 10, 0), blueTeam, redTeam);
-        seedGame(proLeagueMatch, 1, blueTeam, redTeam, heroB, heroA, heroPickOnly, heroD);
-        seedGame(proLeagueMatch, 2, blueTeam, redTeam, heroB, heroA, heroPickOnly, heroC);
-        seedGame(proLeagueMatch, 3, blueTeam, redTeam, heroB, heroA, heroPickOnly, heroF);
-        seedGame(proLeagueMatch, 4, blueTeam, redTeam, heroD, heroA, heroPickOnly, heroF);
-        seedGame(proLeagueMatch, 5, blueTeam, redTeam, heroE, heroC, heroPickOnly, heroD);
-        seedGame(proLeagueMatch, 6, blueTeam, redTeam, heroF, heroC, heroPickOnly, heroD);
+                        Hero heroA = persistHero("Hero A");
+                        Hero heroB = persistHero("Hero B");
+                        Hero heroC = persistHero("Hero C");
+                        Hero heroD = persistHero("Hero D");
+                        Hero heroE = persistHero("Hero E");
+                        Hero heroF = persistHero("Hero F");
+                        Hero heroG = persistHero("Hero G");
+                        Hero heroPickOnly = persistHero("Hero Pick Only");
+                        Hero heroStatA = persistHero("Hero Stat A");
+                        Hero heroStatB = persistHero("Hero Stat B");
+                        Hero heroStatBanOnly = persistHero("Hero Stat Ban Only");
+                        Hero heroStatBanSupport = persistHero("Hero Stat Ban Support");
 
-        EsportsMatch internationalMatch = persistMatch("0", LocalDateTime.of(2026, 5, 2, 10, 0), blueTeam, redTeam);
-        seedGame(internationalMatch, 1, blueTeam, redTeam, heroF, heroG, heroA, heroB);
+                        EsportsMatch proLeagueMatch = persistMatch("1", LocalDateTime.of(2026, 5, 1, 10, 0), blueTeam,
+                                        redTeam);
+                        seedGame(proLeagueMatch, 1, blueTeam, redTeam, heroB, heroA, heroPickOnly, heroD);
+                        seedGame(proLeagueMatch, 2, blueTeam, redTeam, heroB, heroA, heroPickOnly, heroC);
+                        seedGame(proLeagueMatch, 3, blueTeam, redTeam, heroB, heroA, heroPickOnly, heroF);
+                        seedGame(proLeagueMatch, 4, blueTeam, redTeam, heroD, heroA, heroPickOnly, heroF);
+                        seedGame(proLeagueMatch, 5, blueTeam, redTeam, heroE, heroC, heroPickOnly, heroD);
+                        seedGame(proLeagueMatch, 6, blueTeam, redTeam, heroF, heroC, heroPickOnly, heroD);
 
-        EsportsMatch challengerMatch = persistMatch("2", LocalDateTime.of(2026, 5, 3, 10, 0), blueTeam, redTeam);
-        seedGame(challengerMatch, 1, blueTeam, redTeam, blueTeam, heroStatBanOnly, heroStatBanSupport, heroStatA, heroStatB);
-        seedGame(challengerMatch, 2, blueTeam, redTeam, redTeam, heroStatBanOnly, heroG, heroStatA, heroStatB);
-        seedGame(challengerMatch, 3, blueTeam, redTeam, blueTeam, heroStatBanOnly, heroF, heroStatB, heroStatA);
+                        EsportsMatch internationalMatch = persistMatch("0", LocalDateTime.of(2026, 5, 2, 10, 0),
+                                        blueTeam,
+                                        redTeam);
+                        seedGame(internationalMatch, 1, blueTeam, redTeam, heroF, heroG, heroA, heroB);
 
-        entityManager.flush();
-        entityManager.clear();
-    }
+                        EsportsMatch challengerMatch = persistMatch("2", LocalDateTime.of(2026, 5, 3, 10, 0), blueTeam,
+                                        redTeam);
+                        seedGame(challengerMatch, 1, blueTeam, redTeam, blueTeam, heroStatBanOnly, heroStatBanSupport,
+                                        heroStatA, heroStatB);
+                        seedGame(challengerMatch, 2, blueTeam, redTeam, redTeam, heroStatBanOnly, heroG, heroStatA,
+                                        heroStatB);
+                        seedGame(challengerMatch, 3, blueTeam, redTeam, blueTeam, heroStatBanOnly, heroF, heroStatB,
+                                        heroStatA);
 
-    @Test
-    void getTopBannedHeroesMatchesDeterministicDraftCounts() {
-        List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBannedHeroes("AER Pro League", 10);
+                        entityManager.flush();
+                        entityManager.clear();
+                        return null;
+                });
+        }
 
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::heroName, EsportsHeroBanStatResponse::banCount)
-                .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple("Hero A", 4L),
-                        org.assertj.core.groups.Tuple.tuple("Hero B", 3L),
-                        org.assertj.core.groups.Tuple.tuple("Hero C", 2L),
-                        org.assertj.core.groups.Tuple.tuple("Hero D", 1L),
-                        org.assertj.core.groups.Tuple.tuple("Hero E", 1L),
-                        org.assertj.core.groups.Tuple.tuple("Hero F", 1L)
-                );
+        @Test
+        void getTopBannedHeroesMatchesDeterministicDraftCounts() {
+                List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBannedHeroes("AER Pro League", 10);
 
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::heroName)
-                .doesNotContain("Hero Pick Only");
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::tournamentName)
-                .containsOnly("AER Pro League");
-    }
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::heroName, EsportsHeroBanStatResponse::banCount)
+                                .containsExactly(
+                                                org.assertj.core.groups.Tuple.tuple("Hero A", 4L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero B", 3L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero C", 2L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero D", 1L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero E", 1L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero F", 1L));
 
-    @Test
-    void getTopBlueBannedHeroesCountsOnlyBlueBanActions() {
-        List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBlueBannedHeroes("AER Pro League", 10);
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::heroName)
+                                .doesNotContain("Hero Pick Only");
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::tournamentName)
+                                .containsOnly("AER Pro League");
+        }
 
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::heroName, EsportsHeroBanStatResponse::banCount)
-                .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple("Hero B", 3L),
-                        org.assertj.core.groups.Tuple.tuple("Hero D", 1L),
-                        org.assertj.core.groups.Tuple.tuple("Hero E", 1L),
-                        org.assertj.core.groups.Tuple.tuple("Hero F", 1L)
-                );
+        @Test
+        void getTopBlueBannedHeroesCountsOnlyBlueBanActions() {
+                List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBlueBannedHeroes("AER Pro League",
+                                10);
 
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::heroName)
-                .doesNotContain("Hero A", "Hero C", "Hero G", "Hero Pick Only");
-    }
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::heroName, EsportsHeroBanStatResponse::banCount)
+                                .containsExactly(
+                                                org.assertj.core.groups.Tuple.tuple("Hero B", 3L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero D", 1L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero E", 1L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero F", 1L));
 
-    @Test
-    void getTopBannedHeroesHonorsLimitFive() {
-        List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBannedHeroes("AER Pro League", 5);
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::heroName)
+                                .doesNotContain("Hero A", "Hero C", "Hero G", "Hero Pick Only");
+        }
 
-        assertThat(result).hasSize(5);
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::heroName)
-                .containsExactly("Hero A", "Hero B", "Hero C", "Hero D", "Hero E");
-    }
+        @Test
+        void getTopBannedHeroesHonorsLimitFive() {
+                List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBannedHeroes("AER Pro League", 5);
 
-    @Test
-    void getTopBannedHeroesFiltersByTournamentName() {
-        List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBannedHeroes("AER International", 10);
+                assertThat(result).hasSize(5);
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::heroName)
+                                .containsExactly("Hero A", "Hero B", "Hero C", "Hero D", "Hero E");
+        }
 
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::heroName, EsportsHeroBanStatResponse::banCount)
-                .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple("Hero F", 1L),
-                        org.assertj.core.groups.Tuple.tuple("Hero G", 1L)
-                );
-        assertThat(result)
-                .extracting(EsportsHeroBanStatResponse::tournamentName)
-                .containsOnly("AER International");
-    }
+        @Test
+        void getTopBannedHeroesFiltersByTournamentName() {
+                List<EsportsHeroBanStatResponse> result = esportsDataService.getTopBannedHeroes("AER International",
+                                10);
 
-    @Test
-    void getHeroStatsUsesPickAndBanAggregatesWithoutDoubleCounting() {
-        List<EsportsHeroStatResponse> result = esportsDataService.getHeroStats("AER Challenger");
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::heroName, EsportsHeroBanStatResponse::banCount)
+                                .containsExactly(
+                                                org.assertj.core.groups.Tuple.tuple("Hero F", 1L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero G", 1L));
+                assertThat(result)
+                                .extracting(EsportsHeroBanStatResponse::tournamentName)
+                                .containsOnly("AER International");
+        }
 
-        assertThat(result)
-                .extracting(
-                        EsportsHeroStatResponse::heroName,
-                        EsportsHeroStatResponse::pickCount,
-                        EsportsHeroStatResponse::pickWins,
-                        EsportsHeroStatResponse::pickLosses,
-                        EsportsHeroStatResponse::bluePickCount,
-                        EsportsHeroStatResponse::blueWins,
-                        EsportsHeroStatResponse::blueLosses,
-                        EsportsHeroStatResponse::redPickCount,
-                        EsportsHeroStatResponse::redWins,
-                        EsportsHeroStatResponse::redLosses,
-                        EsportsHeroStatResponse::banCount,
-                        EsportsHeroStatResponse::presenceCount
-                )
-                .containsExactly(
-                        org.assertj.core.groups.Tuple.tuple("Hero Stat A", 3L, 1L, 2L, 2L, 1L, 1L, 1L, 0L, 1L, 0L, 3L),
-                        org.assertj.core.groups.Tuple.tuple("Hero Stat B", 3L, 2L, 1L, 1L, 1L, 0L, 2L, 1L, 1L, 0L, 3L),
-                        org.assertj.core.groups.Tuple.tuple("Hero Stat Ban Only", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 3L, 3L),
-                        org.assertj.core.groups.Tuple.tuple("Hero F", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L),
-                        org.assertj.core.groups.Tuple.tuple("Hero G", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L),
-                        org.assertj.core.groups.Tuple.tuple("Hero Stat Ban Support", 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L)
-                );
+        @Test
+        void getHeroStatsUsesPickAndBanAggregatesWithoutDoubleCounting() {
+                List<EsportsHeroStatResponse> result = esportsDataService.getHeroStats("AER Challenger");
 
-        assertThat(result)
-                .extracting(EsportsHeroStatResponse::pickWinRate)
-                .containsExactly(33.333333333333336D, 66.66666666666667D, 0D, 0D, 0D, 0D);
-        assertThat(result)
-                .extracting(EsportsHeroStatResponse::blueWinRate)
-                .containsExactly(50.0D, 100.0D, 0D, 0D, 0D, 0D);
-        assertThat(result)
-                .extracting(EsportsHeroStatResponse::redWinRate)
-                .containsExactly(0D, 50.0D, 0D, 0D, 0D, 0D);
-    }
+                assertThat(result)
+                                .extracting(
+                                                EsportsHeroStatResponse::heroName,
+                                                EsportsHeroStatResponse::pickCount,
+                                                EsportsHeroStatResponse::pickWins,
+                                                EsportsHeroStatResponse::pickLosses,
+                                                EsportsHeroStatResponse::bluePickCount,
+                                                EsportsHeroStatResponse::blueWins,
+                                                EsportsHeroStatResponse::blueLosses,
+                                                EsportsHeroStatResponse::redPickCount,
+                                                EsportsHeroStatResponse::redWins,
+                                                EsportsHeroStatResponse::redLosses,
+                                                EsportsHeroStatResponse::banCount,
+                                                EsportsHeroStatResponse::presenceCount)
+                                .containsExactly(
+                                                org.assertj.core.groups.Tuple.tuple("Hero Stat A", 3L, 1L, 2L, 2L, 1L,
+                                                                1L, 1L, 0L, 1L, 0L, 3L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero Stat B", 3L, 2L, 1L, 1L, 1L,
+                                                                0L, 2L, 1L, 1L, 0L, 3L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero Stat Ban Only", 0L, 0L, 0L,
+                                                                0L, 0L, 0L, 0L, 0L, 0L, 3L, 3L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero F", 0L, 0L, 0L, 0L, 0L, 0L,
+                                                                0L, 0L, 0L, 1L, 1L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero G", 0L, 0L, 0L, 0L, 0L, 0L,
+                                                                0L, 0L, 0L, 1L, 1L),
+                                                org.assertj.core.groups.Tuple.tuple("Hero Stat Ban Support", 0L, 0L, 0L,
+                                                                0L, 0L, 0L, 0L, 0L, 0L, 1L, 1L));
 
-    private void seedGame(EsportsMatch match,
-                          int gameNumber,
-                          EsportsTeam blueTeam,
-                          EsportsTeam redTeam,
-                          Hero blueBanHero,
-                          Hero redBanHero,
-                          Hero bluePickHero,
-                          Hero redPickHero) {
-        seedGame(match, gameNumber, blueTeam, redTeam, null, blueBanHero, redBanHero, bluePickHero, redPickHero);
-    }
+                assertThat(result)
+                                .extracting(EsportsHeroStatResponse::pickWinRate)
+                                .containsExactly(33.333333333333336D, 66.66666666666667D, 0D, 0D, 0D, 0D);
+                assertThat(result)
+                                .extracting(EsportsHeroStatResponse::blueWinRate)
+                                .containsExactly(50.0D, 100.0D, 0D, 0D, 0D, 0D);
+                assertThat(result)
+                                .extracting(EsportsHeroStatResponse::redWinRate)
+                                .containsExactly(0D, 50.0D, 0D, 0D, 0D, 0D);
+        }
 
-    private void seedGame(EsportsMatch match,
-                          int gameNumber,
-                          EsportsTeam blueTeam,
-                          EsportsTeam redTeam,
-                          EsportsTeam winnerTeam,
-                          Hero blueBanHero,
-                          Hero redBanHero,
-                          Hero bluePickHero,
-                          Hero redPickHero) {
-        EsportsMatchGame game = new EsportsMatchGame();
-        game.setMatch(match);
-        game.setGameNumber(gameNumber);
-        game.setBlueTeam(blueTeam);
-        game.setRedTeam(redTeam);
-        game.setWinnerTeam(winnerTeam);
-        entityManager.persist(game);
+        private void seedGame(EsportsMatch match,
+                        int gameNumber,
+                        EsportsTeam blueTeam,
+                        EsportsTeam redTeam,
+                        Hero blueBanHero,
+                        Hero redBanHero,
+                        Hero bluePickHero,
+                        Hero redPickHero) {
+                seedGame(match, gameNumber, blueTeam, redTeam, null, blueBanHero, redBanHero, bluePickHero,
+                                redPickHero);
+        }
 
-        persistDraftAction(game, blueTeam, blueBanHero, BanPickActionType.BAN, 1, BanPickTeamSide.BLUE);
-        persistDraftAction(game, redTeam, redBanHero, BanPickActionType.BAN, 2, BanPickTeamSide.RED);
-        persistDraftAction(game, blueTeam, bluePickHero, BanPickActionType.PICK, 3, BanPickTeamSide.BLUE);
-        persistDraftAction(game, redTeam, redPickHero, BanPickActionType.PICK, 4, BanPickTeamSide.RED);
-    }
+        private void seedGame(EsportsMatch match,
+                        int gameNumber,
+                        EsportsTeam blueTeam,
+                        EsportsTeam redTeam,
+                        EsportsTeam winnerTeam,
+                        Hero blueBanHero,
+                        Hero redBanHero,
+                        Hero bluePickHero,
+                        Hero redPickHero) {
+                EsportsMatchGame game = new EsportsMatchGame();
+                game.setMatch(match);
+                game.setGameNumber(gameNumber);
+                game.setBlueTeam(blueTeam);
+                game.setRedTeam(redTeam);
+                game.setWinnerTeam(winnerTeam);
+                entityManager.persist(game);
 
-    private void persistDraftAction(EsportsMatchGame game,
-                                    EsportsTeam team,
-                                    Hero hero,
-                                    BanPickActionType actionType,
-                                    int stepNumber,
-                                    BanPickTeamSide teamSide) {
-        EsportsMatchDraftAction action = new EsportsMatchDraftAction();
-        action.setGame(game);
-        action.setTeam(team);
-        action.setHero(hero);
-        action.setActionType(actionType);
-        action.setStepNumber(stepNumber);
-        action.setTeamSide(teamSide);
-        entityManager.persist(action);
-    }
+                persistDraftAction(game, blueTeam, blueBanHero, BanPickActionType.BAN, 1, BanPickTeamSide.BLUE);
+                persistDraftAction(game, redTeam, redBanHero, BanPickActionType.BAN, 2, BanPickTeamSide.RED);
+                persistDraftAction(game, blueTeam, bluePickHero, BanPickActionType.PICK, 3, BanPickTeamSide.BLUE);
+                persistDraftAction(game, redTeam, redPickHero, BanPickActionType.PICK, 4, BanPickTeamSide.RED);
+        }
 
-    private EsportsMatch persistMatch(String tier,
-                                      LocalDateTime matchDate,
-                                      EsportsTeam team1,
-                                      EsportsTeam team2) {
-        EsportsMatch match = new EsportsMatch();
-        match.setMatchDate(matchDate);
-        match.setTeam1Code(team1.getTeamCode());
-        match.setTeam2Code(team2.getTeamCode());
-        match.setScore1(3);
-        match.setScore2(2);
-        match.setTier(tier);
-        match.setStage("bang");
-        entityManager.persist(match);
-        return match;
-    }
+        private void persistDraftAction(EsportsMatchGame game,
+                        EsportsTeam team,
+                        Hero hero,
+                        BanPickActionType actionType,
+                        int stepNumber,
+                        BanPickTeamSide teamSide) {
+                EsportsMatchDraftAction action = new EsportsMatchDraftAction();
+                action.setGame(game);
+                action.setTeam(team);
+                action.setHero(hero);
+                action.setActionType(actionType);
+                action.setStepNumber(stepNumber);
+                action.setTeamSide(teamSide);
+                entityManager.persist(action);
+        }
 
-    private EsportsTeam persistTeam(String teamCode, String region) {
-        EsportsTeam team = new EsportsTeam();
-        team.setTeamCode(teamCode);
-        team.setTeamName(teamCode + " Team");
-        team.setLogoUrl("/images/teams/" + teamCode + ".png");
-        team.setRegion(region);
-        team.setScore(1200.0);
-        team.setGameWins(0);
-        team.setGameLosses(0);
-        team.setMatchWins(0);
-        team.setMatchLosses(0);
-        entityManager.persist(team);
-        return team;
-    }
+        private EsportsMatch persistMatch(String tier,
+                        LocalDateTime matchDate,
+                        EsportsTeam team1,
+                        EsportsTeam team2) {
+                EsportsMatch match = new EsportsMatch();
+                match.setMatchDate(matchDate);
+                match.setTeam1Code(team1.getTeamCode());
+                match.setTeam2Code(team2.getTeamCode());
+                match.setScore1(3);
+                match.setScore2(2);
+                match.setTier(tier);
+                match.setStage("bang");
+                entityManager.persist(match);
+                return match;
+        }
 
-    private Hero persistHero(String name) {
-        Hero hero = new Hero();
-        hero.setName(name);
-        hero.setAvatarUrl("/images/heroes/" + name.replace(' ', '-') + ".jpg");
-        entityManager.persist(hero);
-        return hero;
-    }
+        private EsportsTeam persistTeam(String teamCode, String region) {
+                EsportsTeam team = new EsportsTeam();
+                team.setTeamCode(teamCode);
+                team.setTeamName(teamCode + " Team");
+                team.setLogoUrl("/images/teams/" + teamCode + ".png");
+                team.setRegion(region);
+                team.setScore(1200.0);
+                team.setGameWins(0);
+                team.setGameLosses(0);
+                team.setMatchWins(0);
+                team.setMatchLosses(0);
+                entityManager.persist(team);
+                return team;
+        }
+
+        private Hero persistHero(String name) {
+                Hero hero = new Hero();
+                hero.setName(name);
+                hero.setAvatarUrl("/images/heroes/" + name.replace(' ', '-') + ".jpg");
+                entityManager.persist(hero);
+                return hero;
+        }
 }

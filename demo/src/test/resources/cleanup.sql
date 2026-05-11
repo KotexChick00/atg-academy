@@ -1,0 +1,7 @@
+SET REFERENTIAL_INTEGRITY FALSE;
+TRUNCATE TABLE esports_match_draft_actions;
+TRUNCATE TABLE esports_match_games;
+TRUNCATE TABLE esports_matches;
+TRUNCATE TABLE esports_teams;
+TRUNCATE TABLE heroes;
+SET REFERENTIAL_INTEGRITY TRUE;
