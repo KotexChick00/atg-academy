@@ -152,18 +152,33 @@ Create the application database:
 CREATE DATABASE aov_tactics CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 ```
 
-Update `src/main/resources/application.properties` with your local database and security values:
+Update `src/main/resources/application.properties` or export environment variables before running the app:
 
 ```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/aov_tactics?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
-spring.datasource.username=your_mysql_username
-spring.datasource.password=your_mysql_password
+SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/aov_tactics?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true
+DB_USERNAME=your_mysql_username
+DB_PASSWORD=your_mysql_password
+APP_SECURITY_GOOGLE_CLIENT_ID=your_google_client_id
+APP_SECURITY_ADMIN_EMAILS=admin@example.com
+APP_SECURITY_STAFF_EMAILS=
+APP_CORS_ALLOWED_ORIGINS=https://frigidly-attribute-step.ngrok-free.dev,http://localhost:8080
+```
+
+If you prefer to keep local defaults, the app will still use the values from `application.properties`.
+
+For reference, the file defaults now look like this:
+
+```properties
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/aov_tactics?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8&allowPublicKeyRetrieval=true}
+spring.datasource.username=${DB_USERNAME:root}
+spring.datasource.password=${DB_PASSWORD:}
 
 spring.jpa.hibernate.ddl-auto=update
 
-app.security.google-client-id=your_google_client_id
-app.security.admin-emails=admin@example.com
-app.security.staff-emails=
+app.security.google-client-id=${APP_SECURITY_GOOGLE_CLIENT_ID:your_google_client_id}
+app.security.admin-emails=${APP_SECURITY_ADMIN_EMAILS:admin@example.com}
+app.security.staff-emails=${APP_SECURITY_STAFF_EMAILS:}
+app.cors.allowed-origins=${APP_CORS_ALLOWED_ORIGINS:https://frigidly-attribute-step.ngrok-free.dev,http://localhost:8080}
 ```
 
 ### Run the Application
